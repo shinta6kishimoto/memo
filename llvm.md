@@ -1,5 +1,5 @@
+https://llvm.org/docs/WritingAnLLVMBackend.html
 # Instruction Set
-https://llvm.org/docs/WritingAnLLVMBackend.html#instruction-set
 
 第5パラメータは、アセンブリ・プリンタで使用される文字列で、アセンブリ・プリンタ・インターフェースが実装されるまでは空の文字列のままでよい。最後の6番目のパラメータは、「The LLVM Target-Independent Code Generator」で説明したSelectionDAGの選択フェーズで、命令のマッチングに使用されるパターンである。このパラメータは、次のセクション「命令セレクタ」で詳しく説明します。
 
@@ -24,4 +24,37 @@ InstSPは、opフィールドを拘束しません。
 F3は、opフィールドを結合し、rd、op3、rs1フィールドを定義します。F3フォーマット命令は、オペランドのrd、op3、rs1フィールドを束ねる。
 
 F3_1は、op3フィールドをバインドし、rs2フィールドを定義します。F3_1フォーマット命令は、オペランドをrd、rs1、rs2の各フィールドにバインドします。この結果、XNORrr命令は、$dst、$b、および$cのオペランドをそれぞれrd、rs1、およびrs2フィールドにバインドします。
+
+# Instruction Operand Name Mapping
+命令のオペランド名マッピング
+
+この関数は、テーブルジェン名に基づいて MachineInstr 内のオペランドのインデックスを検索するために使用できます。これは、テーブルジェン名に基づいて、MachineInstr内のオペランドのインデックスを検索するために使用できます。命令のテーブルジェン定義でUseNamedOperandTableビットを設定すると、そのオペランドのすべてがllvm::XXX:OpName名前空間の列挙に追加され、さらに OperandMapテーブルにエントリが追加されます。
+
+OpName 列挙体のエントリは TableGen の定義をそのまま使用しているため、小文字の名前を持つオペランドは列挙体のエントリも小文字になります。
+
+バックエンドに getNamedOperandIdx() 関数を組み込むには、XXXInstrInfo.cpp および XXXInstrInfo.h にいくつかのプリプロセッサ・マクロを定義する必要があります。例えば、以下のようになります。
+
+XXXInstrInfo.cpp:
+
+# Instruction Operand Type
+命令のオペランド・タイプ
+
+テーブルジェンは、バックエンドで定義されているすべての名前付きオペランド・タイプからなる列挙をllvm::XXX::OpTypes名前空間で生成します。いくつかの一般的な即時オペランド・タイプ（i8、i32、i64、f32、f64など）は、include/llvm/Target/Target.tdですべてのターゲットに対して定義されており、各ターゲットのOpTypes列挙で利用できます。また、名前の付いたオペランドタイプのみが列挙され、匿名タイプは無視されます。例えば、X86バックエンドではbrtargetとbrtarget8が定義されていますが、これらはどちらもTableGen Operandクラスのインスタンスで、ブランチターゲットのオペランドを表しています。
+
+これは次のようになります。
+
+TableGenの典型的な方法として、列挙を使用するには、プリプロセッサ・マクロを定義する必要があります。
+
+# Instruction Scheduling
+インストラクションのスケジューリング
+
+インストラクション・イティネラリーは、MCDesc::getSchedClass()を使用して照会できます。その値は、XXXGenInstrInfo.incのTableGenで生成されたllvm::XXX::Sched名前空間の列挙で命名することができます。ス ケ ジ ュ ール ク ラ ス の名前は、 XXXSchedule.td で提供 さ れてい る も の と 同 じ であ り 、 デフ ォ ル ト の NoItinerary ク ラ ス も 含まれます。
+
+スケジュール モデルは、TableGen が CodeGenSchedModels クラスを使用して、SubtargetEmitter で生成する。これは、マシンのリソース使用を指定する旅程方法とは異なります。ツール utils/schedcover.py を使用すると、どの命令がスケジュールモデルの記述でカバーされていて、どの命令がカバーされていないかを判断することができます。まず、以下の手順で出力ファイルを作成します。次に、出力ファイルに対して schedcover.py を実行します。
+
+スケジュールモデルを生成した際のデバッグ出力を取得するには、適切なターゲットディレクトリに移動し、以下のコマンドを使用します。コマンドにsubtarget-emitter debugオプションを指定します。
+
+<build>はビルドディレクトリ、srcはソースディレクトリ、<target>はターゲットの名前です。上記のコマンドが必要なものであることを再確認するために、次のようにしてビルドから正確なTableGenコマンドをキャプチャすることができます。
+
+と入力し、出力されたllvm-tblgenコマンドを検索します。
 

@@ -13,7 +13,7 @@ LLVMによる自動ベクトル化を用いた独自プロセッサのための�
 独自プロセッサ向けアセンブリコード生成のためのLLVMによる自動ベクトル化を用いたバックエンドの開発
 
 ## 英題
-Development of backend using auto vectorization by LLVM for generating assembly code for [独自の英訳をどうするか] processors.
+Development of backend using auto vectorization by LLVM to generating assembly code to [独自の英訳をどうするか] processors.
 
 ## 要旨
 組込み向けに独自にベクトル拡張したRISC-Vのアセンブリコードを生成するコンパイラの開発を目的として、コンパイラ基盤であるLLVMを用いた開発を行なう。  
